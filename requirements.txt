@@ -47,4 +47,5 @@ ipykernel==6.29.5
 # ollama = {version ==0.3.3", optional = true}
 # openai-whisper = {version ==20240930"}
 mediapy == 1.2.2
-mujoco == 3.2.5
+mujoco == 3.2.6
+absl-py == 2.1.0
