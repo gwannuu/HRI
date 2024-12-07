@@ -17,3 +17,11 @@ low_cost_robot/
 # Run mujoco simulation in mac OS
 - use `mjpython` binary file instead of `python3`
 - `mjpython` is located under the package `mujoco`
+
+# interface branch
+## requirements
+```bash
+pip install openai
+```
+api_key는 유출 방지를 위해 깃허브에 업로드 하지 않습니다.
+
