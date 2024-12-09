@@ -22,3 +22,23 @@ SYSTEM_PROMPT = """당신은 인간과 상호작용하는 친절한 로봇입니
 
 항상 사용자에게 공감하고, 즐거운 경험을 제공하기 위해 노력하세요."""
 
+
+RECOMMAND_SONG_LIST = """1. 유저가 스트레스 심한 상태
+    → 스트레스가 풀릴만한 빠르고 신나는 노래
+    - (149 bpm) ROSÉ & Bruno Mars - APT
+    - (135 bpm) 빅뱅 - 뱅뱅뱅
+    - (137 bpm)MILLION DOLLAR BABY - tommy richman bpm
+
+2. 곧 크리스마스니까 크리스마스에 어울리는 노래 추천
+    → 캐롤
+    - (108 bpm) Wham! - Last Christmas
+
+3. 유저의 기분이 안좋은 일이 있어서 이 걸 잊고 싶음
+    → 신나는 노래
+    - (81 bpm) Queen - We Will Rock You
+    - (126 bpm) LALA LAND - Another Day Of Sun
+
+4. 유저가 프로젝트 때문에 정신 없으니 조용한 분위기의 노래를 원함
+    → 느린 노래
+    - (59 bpm) BIGBANG - 봄여름가을겨울
+    - (98 bpm) LA LA LAND - City of Star"""
