@@ -113,7 +113,7 @@ def speak_text(text):
     sd.play(data, samplerate)  # 음성 파일 재생
     sd.wait()  # 재생이 끝날 때까지 대기
     os.remove(speech_file_path)  # 재생 후 임시 파일 삭제
-    
+
 
 def input_text_test():
     """
