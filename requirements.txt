@@ -18,6 +18,12 @@ huggingface-hub[hf-transfer, cli] >= 0.25.0
 gymnasium ==0.29.1
 cmake >=3.29.0.1
 openai
+playsound
+gtts
+numpy
+soundfile
+sounddevice
+
 # gym-dora = { git https://github.com/dora-rs/dora-lerobot.git", subdirectory gym_dora", optional = true }
 # gym-pusht = { version >=0.1.5", optional = true}
 # gym-xarm = { version >=0.1.1", optional = true}
