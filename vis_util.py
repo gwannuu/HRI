@@ -1,5 +1,8 @@
-from enum import Enum
 import pickle
+from enum import Enum
+
+import numpy as np
+
 
 class Joint(Enum):
     NOSE = 0
@@ -19,6 +22,11 @@ class Joint(Enum):
     R_KNEE = 14
     L_ANKLE = 15
     R_ANKLE = 16
+
+class Axis(Enum):
+    x = 0
+    y = 2
+    z = 1
 
 # COCO 포맷의 키포인트 연결 정의
 connections = [
@@ -92,4 +100,8 @@ def set_part_color(link):
 def open_files(path):
     with open(f'{path}', 'rb')as f:
         data = pickle.load(f)
-    return data["keypoints3d_optim"]
+    data = data["keypoints3d_optim"]
+    print(data.shape)
+    data = data[:, :, [Axis.x.value, Axis.y.value, Axis.z.value]]
+    print(data.shape)
+    return data
