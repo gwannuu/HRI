@@ -1,0 +1,4 @@
+.venv/
+venv/
+low_cost_robot/assets/
+**/__pycache__/
