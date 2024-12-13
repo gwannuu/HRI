@@ -17,12 +17,10 @@ huggingface-hub[hf-transfer, cli] >= 0.25.0
 # TODO(rcadene, aliberts): Make gym 1.0.0 work
 gymnasium ==0.29.1
 cmake >=3.29.0.1
-openai
-playsound
-gtts
-numpy
-soundfile
-sounddevice
+openai ==1.57.3
+gtts ==2.5.4
+soundfile ==0.12.1
+sounddevice ==0.5.1
 
 # gym-dora = { git https://github.com/dora-rs/dora-lerobot.git", subdirectory gym_dora", optional = true }
 # gym-pusht = { version >=0.1.5", optional = true}
