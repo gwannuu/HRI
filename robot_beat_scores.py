@@ -86,17 +86,19 @@ def recover_motion_to_keypoints(motion, smpl_model):
     return keypoints3d
 
 def motion_peak_onehot(joints):
-    print (joints)
     velocity = np.zeros_like(joints, dtype=np.float32)
     velocity[1:] = joints[1:] - joints[:-1]
-    velocity_norms = np.linalg.norm(velocity, axis=2)
+    #print (velocity)
+    #print (velocity.shape)
+    velocity_norms = np.linalg.norm(velocity, axis=2) # (seq_len, num_joints) 
     envelope = np.sum(velocity_norms, axis=1)  # (seq_len,)
+    #print (envelope)
 
     # Find local minima in velocity -- beats
-    peak_idxs = scisignal.argrelextrema(envelope, np.less, axis=0, order=1) # 10 for 60FPS
+    peak_idxs = scisignal.argrelextrema(envelope, np.less, axis=0, order=5) # 10 for 60FPS
     peak_onehot = np.zeros_like(envelope, dtype=bool)
     peak_onehot[peak_idxs] = 1
-    return peak_onehot
+    return peak_onehot, envelope
 
 def alignment_score(music_beats, motion_beats, sigma=3):
     if motion_beats.sum() == 0:
@@ -111,22 +113,60 @@ def alignment_score(music_beats, motion_beats, sigma=3):
         score_all.append(score)
     return sum(score_all) / len(score_all)
 
-# Paths to your files
-wav_file = "./data/test_Twist_And_Shout.wav"
-pkl_file = "./data/motion_data.pkl"
+average = []
+for k in range(1, 11):
 
-duration = 30
-fps = 60
+    # Paths to your files
+    wav_file = "/home/uhcc/Desktop/EDGE/music/Last_Christmas/Last_Christmas.wav"
+    pkl_file = f"/home/uhcc/Desktop/EDGE/eval/motions/Last_Christmas/robot/test_{k}.pkl"
 
-# Step 1: Extract Music Beats
-music_beats = extract_music_beats(wav_file, duration, fps)
+    duration = 30
+    fps = 30
+    # Step 1: Extract Music Beats
+    music_beats = extract_music_beats(wav_file, duration, fps)
 
-# Step 2: Extract Motion Beats
-motion_data = load_motion(pkl_file)  # Load motion data from .pkl
-# motion_keypoints = recover_motion_to_keypoints(motion_data, smpl_model)  # SMPL required
-# motion_beats = motion_peak_onehot(motion_keypoints)
-motion_beats = motion_peak_onehot(motion_data)
+    # Step 2: Extract Motion Beats
+    motion_data = load_motion(pkl_file)  # Load motion data from .pkl
+    # motion_keypoints = recover_motion_to_keypoints(motion_data, smpl_model)  # SMPL required
+    # motion_beats = motion_peak_onehot(motion_keypoints)
+    motion_beats, velocity = motion_peak_onehot(motion_data)
 
-# Step 3: Calculate Beat Score
-beat_score = alignment_score(music_beats, motion_beats, sigma=3)
-print(f"Beat Alignment Score: {beat_score}")
+    # Step 3: Calculate Beat Score
+    beat_score = alignment_score(music_beats, motion_beats, sigma=3)
+    average.append(beat_score)
+    print(f"Beat Alignment Score: {beat_score}")
+
+average = np.average(average)
+print (f"Average Beat Alignment Score: {average}")
+
+# import matplotlib.pyplot as plt
+# import numpy as np
+
+# # Replace these with your actual data
+# frames = np.arange(900)
+
+# # Plot the data
+# plt.figure(figsize=(15, 6))
+
+# # Plot music beats as vertical lines
+# for frame in frames[music_beats == 1]:
+#     plt.axvline(x=frame, color='orange', linestyle='--', alpha=0.5, label='Music Beats' if frame == frames[music_beats == 1][0] else "")
+
+# # Plot motion beats as vertical lines
+# for frame in frames[motion_beats == 1]:
+#     plt.axvline(x=frame, color='green', linestyle='--',  alpha=0.5, label='Motion Beats' if frame == frames[motion_beats == 1][0] else "")
+
+
+# # Plot velocity as a line
+# plt.plot(frames, velocity, color='blue', label='Velocity', linewidth=2)
+
+# # Add labels, legend, and grid
+# plt.title('Music Beats, Motion Beats, and Velocity')
+# plt.xlabel('Frames')
+# plt.ylabel('Values')
+# plt.legend()
+# plt.grid(alpha=0.3)
+
+# # Show the plot
+# plt.tight_layout()
+# plt.show()
