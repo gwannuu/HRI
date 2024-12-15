@@ -4,7 +4,6 @@ import threading
 import time
 from queue import Queue, Full
 import pygame
-import mutagen
 import mujoco
 import logging
 from typing import List, Optional, Dict

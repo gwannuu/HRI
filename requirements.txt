@@ -22,7 +22,6 @@ gtts ==2.5.4
 soundfile ==0.12.1
 sounddevice ==0.5.1
 opencv-python
-mutagen
 pygame
 
 # gym-dora = { git https://github.com/dora-rs/dora-lerobot.git", subdirectory gym_dora", optional = true }
