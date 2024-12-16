@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from contextlib import contextmanager
 from time import perf_counter
 import pickle
+import sys
+import os
 from simulated_robot import SimulatedRobot
 from robot import Robot
 
@@ -286,7 +288,7 @@ class DanceInteractionSystem:
         self.diff_buffer = []
         self.loop_running = False
         
-        self.music_path = music_path or DanceSystemConfig.MUSIC_PATH
+        self.music_path = music_path
         self.motion_data = load_motion(dance_path)
         
         #robot_setting
@@ -405,7 +407,7 @@ class DanceInteractionSystem:
 def main():
     """Main entry point of the application."""
     logger.info("Starting system")
-    controller = DanceInteractionSystem()
+    controller = DanceInteractionSystem(music_path='music/Papa Nugs - Hyperdrive.mp3', dance_path='motions/haechan.pkl')
     controller.dancewithme()
     logger.info("System terminated")
 

@@ -1,0 +1,4 @@
+from robot_interaction.sync_music_robot_v2 import *
+
+if __name__=="__main__":
+    main()
