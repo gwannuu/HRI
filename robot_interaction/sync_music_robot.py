@@ -102,7 +102,7 @@ def check_threshold(frame_buffer, diff_buffer, threshold, max_frames):
 # 메인 실행 함수
 def main():
     # 임계값 설정
-    threshold = 10.0  # 임의의 쓰레숄드 값
+    threshold = 5.0  # 임의의 쓰레숄드 값
     frame_buffer = []
     diff_buffer = []
     max_frames = 15
