@@ -407,7 +407,7 @@ class DanceInteractionSystem:
 def main():
     """Main entry point of the application."""
     logger.info("Starting system")
-    controller = DanceInteractionSystem(music_path='music/Papa Nugs - Hyperdrive.mp3', dance_path='motions/haechan.pkl')
+    controller = DanceInteractionSystem(music_path='music/Papa Nugs - Hyperdrive.mp3', dance_path='motions/APT/test_1.pkl')
     controller.dancewithme()
     logger.info("System terminated")
 
