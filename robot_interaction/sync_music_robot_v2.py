@@ -10,6 +10,10 @@ from typing import List, Optional, Dict
 from dataclasses import dataclass
 from contextlib import contextmanager
 from time import perf_counter
+import pickle
+from interface import SimulatedRobot
+from robot import Robot
+
 
 # Configure logging
 logging.basicConfig(
@@ -26,7 +30,6 @@ class DanceSystemConfig:
     FPS: int = 30
     MAX_ROBOT_STEPS: int = 900
     CAMERA_INDEX: int = 0
-    MUSIC_PATH: str = 'music/Papa Nugs - Hyperdrive.mp3'
     FRAME_QUEUE_SIZE: int = 100
     QUEUE_TIMEOUT: float = 1.0
     THREAD_JOIN_TIMEOUT: float = 5.0
@@ -123,11 +126,22 @@ class MusicPlayer:
             logger.error(f"Error stopping music: {e}")
             
 
+# Function to load .pkl file
+def load_motion(pkl_file):
+    with open(pkl_file, 'rb') as f:
+        data = pickle.load(f)
+    motion = data.get('full_pose')
+    return motion
+
 @performance_monitor
 def robot_control(stop_event: threading.Event, 
                  pause_event: threading.Event,
                  robot_done_event: threading.Event,
-                 status_monitor: ComponentStateManager) -> None:
+                 status_monitor: ComponentStateManager,
+                 motion_data: pickle,
+                 real_robot: Robot,
+                 sim_robot: SimulatedRobot,
+                 mujoco_data:mujoco.MjData) -> None:
     """Control robot movements and simulation.
     
     Args:
@@ -145,11 +159,39 @@ def robot_control(stop_event: threading.Event,
                 status_monitor.update_status('robot', 'paused')
                 time.sleep(1/DanceSystemConfig.FPS)
                 continue
+            
+            pwm = real_robot.read_position()
+            pwm = np.array(pwm)
 
-            # Simulation step would go here
-            step_count += 1
-            logger.debug(f"Robot step: {step_count}")
+            # 로봇 동작 완료를 위한 카운터 또는 조건 설정
+            step_count = 0
+            max_steps = 900  # 로봇이 동작할 총 스텝 수
 
+            # subprocess.run(["open", music_path])
+            for k in range(max_steps):
+
+                target_pwm = sim_robot._pos2pwm(motion_data[k])
+                target_pwm = np.array(target_pwm)
+                print (target_pwm)
+
+                # Smoothly interpolate between the current and target positions
+                smooth_mover = np.linspace(pwm, target_pwm, 2)
+                for i in range(2):
+                    # 30fps에 맞추기 위해 대기 시간 설정
+                    time.sleep(0.013)
+                    intermediate_pwm = smooth_mover[i]
+                    real_robot.set_goal_pos([int(pos) for pos in intermediate_pwm])
+
+                    # Update the simulation with the intermediate positions
+                    mujoco_data.qpos[:6] = sim_robot._pwm2pos(intermediate_pwm)
+
+                step_count += 1
+                print(f"Step: {step_count}")
+                logger.debug(f"Robot step: {step_count}")
+
+
+                pwm = target_pwm
+            
             if step_count >= DanceSystemConfig.MAX_ROBOT_STEPS:
                 logger.info("Robot motion completed")
                 robot_done_event.set()
@@ -232,7 +274,7 @@ def check_threshold(frame_buffer: List[np.ndarray],
 class DanceInteractionSystem:
     """Main system controller class."""
 
-    def __init__(self):
+    def __init__(self, music_path: str = None, dance_path: str = None):
         self.status_monitor = ComponentStateManager()
         self.stop_event = threading.Event()
         self.pause_event = threading.Event()
@@ -243,6 +285,30 @@ class DanceInteractionSystem:
         self.frame_buffer = []
         self.diff_buffer = []
         self.loop_running = False
+        
+        self.music_path = music_path or DanceSystemConfig.MUSIC_PATH
+        self.motion_data = load_motion(dance_path)
+        
+        #robot_setting
+        self.mujoco_model = mujoco.MjModel.from_xml_path('low_cost_robot/scene.xml')
+        self.mujoco_data = mujoco.MjData(self.mujoco_model)
+
+        # Initialize simulated and real robots
+        self.sim_robot = SimulatedRobot(self.mujoco_model,self.mujoco_data)
+        self.real_robot = Robot(device_name='/dev/tty.usbmodem58760436701')
+        self._initialize_robot(self)
+
+
+    def _initialize_robot(self):
+        # Set the robot to position control mode
+        self.real_robot._set_position_control()
+        self.real_robot._enable_torque()
+
+        # Read initial PWM positions from the real robot
+        pwm = self.real_robot.read_position()
+        pwm = np.array(pwm)
+        self.mujoco_data.qpos[:6] = self.sim_robot._pwm2pos(pwm)
+        self.mujoco_data.qpos[1] = -self.sim_robot._pwm2pos(pwm[1])
 
     def initialize_threads(self):
         """Initialize and start system threads."""
@@ -273,10 +339,10 @@ class DanceInteractionSystem:
         cv2.destroyAllWindows()
         logger.info("System shutdown complete")
 
-    def dancewithme(self,music_path:str=None, dance_path:str=None):
+    def dancewithme(self):
         """Main system execution loop."""
         try:
-            with MusicPlayer(DanceSystemConfig.MUSIC_PATH) as music_player:
+            with MusicPlayer(self.music_path) as music_player:
                 self.initialize_threads()
 
                 while True:
