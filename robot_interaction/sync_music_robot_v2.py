@@ -273,7 +273,7 @@ class SystemController:
         cv2.destroyAllWindows()
         logger.info("System shutdown complete")
 
-    def dancewithme(self,music_name:str):
+    def dancewithme(self,music_path:str, dance_path:str):
         """Main system execution loop."""
         try:
             with MusicPlayer(Config.MUSIC_PATH) as music_player:
