@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from contextlib import contextmanager
 from time import perf_counter
 import pickle
-from interface import SimulatedRobot
+from simulated_robot import SimulatedRobot
 from robot import Robot
 
 
@@ -320,7 +320,7 @@ class DanceInteractionSystem:
         self.robot_thread = threading.Thread(
             target=robot_control,
             args=(self.stop_event, self.pause_event, self.robot_done_event, 
-                  self.status_monitor)
+                  self.status_monitor, self.motion_data,self.real_robot, self.sim_robot,self.mujoco_data)
         )
 
         self.pause_event.set()  # Start paused
