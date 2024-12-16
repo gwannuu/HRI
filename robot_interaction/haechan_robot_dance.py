@@ -16,13 +16,14 @@ def load_motion(pkl_file):
     return motion
 
 # 로봇 명령을 보내는 함수
-def robot_control(stop_event, pause_event, robot_done_event, motion_data):
+def robot_control(motion_data):
 
-    while not stop_event.is_set():
-        if pause_event.is_set():
+    # while not stop_event.is_set():
+    while True:
+        # if pause_event.is_set():
             # 일시 중지 상태에서는 대기
-            time.sleep(0.1)
-            continue
+            # time.sleep(0.1)
+            # continue
         
         # Read the current position from the real robot
         pwm = real_robot.read_position()
@@ -59,7 +60,8 @@ def robot_control(stop_event, pause_event, robot_done_event, motion_data):
         # 로봇의 제어가 끝나면 stop_event가 설정되어 루프를 빠져나와야함
         if step_count >= max_steps:
             print("Robot motion completed.")
-            robot_done_event.set()  # 로봇 동작 완료 이벤트 설정
+            exit()
+            # robot_done_event.set()  # 로봇 동작 완료 이벤트 설정
 
         break  # 루프 종료
 
@@ -83,9 +85,10 @@ if __name__=="__main__":
     mujoco_data.qpos[:6] = sim_robot._pwm2pos(pwm)
     mujoco_data.qpos[1] = -sim_robot._pwm2pos(pwm[1])
     
-    pkl_file = './test_7.pkl'
-    music_path = './test_7.mp4'
+    pkl_file = 'motions/APT/test_7.pkl'
+    # music_path = './test_7.mp4'
+    music_path = "music/Zedd & Alessia Cara_Stay.mp3"
     motion_data = load_motion(pkl_file)
     
     # Set up events for controlling the robot
-    robot_control()
+    robot_control(motion_data)

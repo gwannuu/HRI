@@ -2,138 +2,18 @@ import cv2
 import numpy as np
 import threading
 import time
-from queue import Queue, Full
+from queue import Queue
 import pygame
 import mujoco
 import logging
-from typing import List, Optional, Dict
-from dataclasses import dataclass
-from contextlib import contextmanager
-from time import perf_counter
+from typing import List
 import pickle
-import sys
-import os
+from robot_interaction.camera_capture import camera_capture
+from robot_interaction.log import logger
+from robot_interaction.music_player import MusicPlayer
+from robot_interaction.util import ComponentStateManager, DanceSystemConfig, load_motion, performance_monitor
 from simulated_robot import SimulatedRobot
 from robot import Robot
-
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-@dataclass
-class DanceSystemConfig:
-    """System configuration parameters."""
-    THRESHOLD: float = 10.0
-    MAX_FRAMES: int = 15
-    FPS: int = 30
-    MAX_ROBOT_STEPS: int = 900
-    CAMERA_INDEX: int = 0
-    FRAME_QUEUE_SIZE: int = 100
-    QUEUE_TIMEOUT: float = 1.0
-    THREAD_JOIN_TIMEOUT: float = 5.0
-    
-# System Status and Performance Monitoring:
-class ComponentStateManager:
-    """Monitors and maintains system component status."""
-    
-    def __init__(self):
-        self._status: Dict[str, str] = {
-            'robot': 'idle',
-            'music': 'stopped',
-            'camera': 'inactive'
-        }
-        self._lock = threading.Lock()
-
-    def update_status(self, component: str, status: str) -> None:
-        """Update the status of a system component."""
-        with self._lock:
-            if component in self._status:
-                self._status[component] = status
-                logger.info(f"{component} status updated to: {status}")
-            else:
-                logger.warning(f"Unknown component: {component}")
-
-    def get_status(self, component: str) -> str:
-        """Get the current status of a system component."""
-        with self._lock:
-            return self._status.get(component, 'unknown')
-
-def performance_monitor(func):
-    """Decorator for monitoring function performance."""
-    def wrapper(*args, **kwargs):
-        start = perf_counter()
-        result = func(*args, **kwargs)
-        duration = perf_counter() - start
-        logger.debug(f"{func.__name__} took {duration:.3f} seconds")
-        return result
-    return wrapper
-
-# Music Player:
-class MusicPlayer:
-    """Handles music playback using pygame mixer."""
-
-    def __init__(self, filename: str):
-        """Initialize the music player.
-        
-        Args:
-            filename: Path to the music file
-        """
-        self.filename = filename
-        self.is_paused = False
-        pygame.mixer.init()
-        logger.info("Music player initialized")
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stop()
-        pygame.mixer.quit()
-
-    def play(self) -> None:
-        """Start or resume music playback."""
-        try:
-            if not pygame.mixer.music.get_busy() and not self.is_paused:
-                pygame.mixer.music.load(self.filename)
-                pygame.mixer.music.play()
-                logger.info("Music started")
-            elif self.is_paused:
-                pygame.mixer.music.unpause()
-                self.is_paused = False
-                logger.info("Music resumed")
-        except Exception as e:
-            logger.error(f"Error in music playback: {e}")
-
-    def pause(self) -> None:
-        """Pause music playback."""
-        try:
-            if pygame.mixer.music.get_busy() and not self.is_paused:
-                pygame.mixer.music.pause()
-                self.is_paused = True
-                logger.info("Music paused")
-        except Exception as e:
-            logger.error(f"Error pausing music: {e}")
-
-    def stop(self) -> None:
-        """Stop music playback."""
-        try:
-            pygame.mixer.music.stop()
-            self.is_paused = False
-            logger.info("Music stopped")
-        except Exception as e:
-            logger.error(f"Error stopping music: {e}")
-            
-
-# Function to load .pkl file
-def load_motion(pkl_file):
-    with open(pkl_file, 'rb') as f:
-        data = pickle.load(f)
-    motion = data.get('full_pose')
-    return motion
 
 @performance_monitor
 def robot_control(stop_event: threading.Event, 
@@ -207,44 +87,6 @@ def robot_control(stop_event: threading.Event,
         status_monitor.update_status('robot', 'stopped')
 
 @performance_monitor
-def camera_capture(frame_queue: Queue, 
-                  stop_event: threading.Event,
-                  status_monitor: ComponentStateManager) -> None:
-    """Capture frames from camera and add to queue.
-    
-    Args:
-        frame_queue: Queue for storing captured frames
-        stop_event: Event to signal thread termination
-        status_monitor: System status monitor
-    """
-    try:
-        cap = cv2.VideoCapture(DanceSystemConfig.CAMERA_INDEX)
-        if not cap.isOpened():
-            logger.error("Failed to open camera")
-            return
-
-        status_monitor.update_status('camera', 'running')
-
-        while not stop_event.is_set():
-            ret, frame = cap.read()
-            if not ret:
-                logger.warning("Failed to capture frame")
-                continue
-
-            try:
-                frame_queue.put(frame, timeout=DanceSystemConfig.QUEUE_TIMEOUT)
-            except Full:
-                frame_queue.get()  # Remove oldest frame
-                frame_queue.put(frame)
-
-    except Exception as e:
-        logger.error(f"Camera capture error: {e}")
-    finally:
-        cap.release()
-        status_monitor.update_status('camera', 'stopped')
-        
-        
-@performance_monitor
 def check_threshold(frame_buffer: List[np.ndarray],
                    diff_buffer: List[float],
                    threshold: float,
@@ -297,8 +139,8 @@ class DanceInteractionSystem:
 
         # Initialize simulated and real robots
         self.sim_robot = SimulatedRobot(self.mujoco_model,self.mujoco_data)
-        self.real_robot = Robot(device_name='/dev/tty.usbmodem58760436701')
-        self._initialize_robot(self)
+        self.real_robot = Robot(device_name=DanceSystemConfig.PORT_NAME)
+        self._initialize_robot()
 
 
     def _initialize_robot(self):
@@ -404,12 +246,22 @@ class DanceInteractionSystem:
 
         return False
 
-def main():
+def run_robot(music_path: str, dance_path: str, withme: bool):
     """Main entry point of the application."""
     logger.info("Starting system")
-    controller = DanceInteractionSystem(music_path='music/Papa Nugs - Hyperdrive.mp3', dance_path='motions/APT/test_1.pkl')
-    controller.dancewithme()
+    controller = DanceInteractionSystem(
+        music_path=music_path,
+        dance_path=dance_path,
+    )
+    if withme:
+        controller.dancewithme()
+    # else:
+        # controller.danceforme()
     logger.info("System terminated")
 
 if __name__ == "__main__":
-    main()
+    run_robot(
+        music_path = "music/Zedd & Alessia Cara_Stay.mp3",
+        dance_path = "motions/APT/test_1.pkl",
+        withme=True,
+    )
