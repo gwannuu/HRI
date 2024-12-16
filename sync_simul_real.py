@@ -6,12 +6,14 @@ import mujoco.viewer
 from simulated_robot import SimulatedRobot
 from robot import Robot
 
+from robot_interaction.util import DanceSystemConfig
+
 m = mujoco.MjModel.from_xml_path('low_cost_robot/scene.xml')
 d = mujoco.MjData(m)
 
 r = SimulatedRobot(m, d)
 
-robot = Robot(device_name='/dev/ttyACM0')
+robot = Robot(device_name=DanceSystemConfig.PORT_NAME)
 # robot._disable_torque()
 robot._set_position_control()
 pwm = robot.read_position()
@@ -31,6 +33,7 @@ with mujoco.viewer.launch_passive(m, d) as viewer:
     pwm = robot.read_position()
     pwm = np.array(pwm)
     d.qpos[:6] = r._pwm2pos(pwm)
+    d.qpos[1] = -r._pwm2pos(pwm[1])
 
     mujoco.mj_step(m, d)
   
