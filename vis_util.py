@@ -1,9 +1,6 @@
 import pickle
 from enum import Enum
 
-import numpy as np
-
-
 class Joint(Enum):
     NOSE = 0
     L_EYE = 1
@@ -23,10 +20,6 @@ class Joint(Enum):
     L_ANKLE = 15
     R_ANKLE = 16
 
-class Axis(Enum):
-    x = 0
-    y = 2
-    z = 1
 
 # COCO 포맷의 키포인트 연결 정의
 connections = [
@@ -97,11 +90,67 @@ def set_part_color(link):
     raise Exception()
 
 
-def open_files(path):
-    with open(f'{path}', 'rb')as f:
-        data = pickle.load(f)
-    data = data["keypoints3d_optim"]
-    print(data.shape)
-    data = data[:, :, [Axis.x.value, Axis.y.value, Axis.z.value]]
-    print(data.shape)
-    return data
+
+class SMPL_JOINT(Enum):
+    ROOT = 0
+    LHIP = 1
+    RHIP = 2
+    BELLY = 3
+    LKNEE = 4
+    RKNEE = 5
+    SPINE = 6
+    LANKLE = 7
+    RANKLE = 8
+    CHEST = 9
+    LTOES = 10
+    RTOES = 11
+    NECK = 12
+    LINSHOULDER = 13
+    RINSHOULDER = 14
+    HEAD = 15
+    LSHOULDER = 16
+    RSHOULDER = 17
+    LELBOW = 18
+    RELBOW = 19
+    LWRIST = 20
+    RWRIST = 21
+    LHAND = 22
+    RHAND = 23
+
+smpl_connection_info = {
+    "head": [
+        (SMPL_JOINT.HEAD.value, SMPL_JOINT.NECK.value),
+        (SMPL_JOINT.NECK.value, SMPL_JOINT.CHEST.value),
+    ],
+    "torso": [
+        (SMPL_JOINT.CHEST.value, SMPL_JOINT.RINSHOULDER.value),
+        (SMPL_JOINT.RINSHOULDER.value, SMPL_JOINT.RSHOULDER.value),
+        (SMPL_JOINT.CHEST.value, SMPL_JOINT.LINSHOULDER.value),
+        (SMPL_JOINT.LINSHOULDER.value, SMPL_JOINT.LSHOULDER.value),
+        (SMPL_JOINT.CHEST.value, SMPL_JOINT.SPINE.value),
+        (SMPL_JOINT.SPINE.value, SMPL_JOINT.BELLY.value),
+        (SMPL_JOINT.BELLY.value, SMPL_JOINT.ROOT),
+    ],
+    "left_arm": [
+        (SMPL_JOINT.LSHOULDER.value, SMPL_JOINT.LELBOW.value),
+        (SMPL_JOINT.LELBOW.value, SMPL_JOINT.LWRIST.value),
+        (SMPL_JOINT.LWRIST.value, SMPL_JOINT.LHAND.value),
+    ],
+    "right_arm": [
+        (SMPL_JOINT.RSHOULDER.value, SMPL_JOINT.RELBOW.value),
+        (SMPL_JOINT.RELBOW.value, SMPL_JOINT.RWRIST.value),
+        (SMPL_JOINT.RWRIST.value, SMPL_JOINT.RHAND.value),
+    ],
+    "left_leg": [
+        (SMPL_JOINT.ROOT.value, SMPL_JOINT.LHIP.value),
+        (SMPL_JOINT.LHIP.value, SMPL_JOINT.LKNEE.value),
+        (SMPL_JOINT.LKNEE.value, SMPL_JOINT.LANKLE.value),
+        (SMPL_JOINT.LANKLE.value, SMPL_JOINT.LTOES.value),
+    ],
+    "right_leg": [
+        (SMPL_JOINT.ROOT.value, SMPL_JOINT.RHIP.value),
+        (SMPL_JOINT.RHIP.value, SMPL_JOINT.RKNEE.value),
+        (SMPL_JOINT.RKNEE.value, SMPL_JOINT.RANKLE.value),
+        (SMPL_JOINT.RANKLE.value, SMPL_JOINT.RTOES.value),
+    ],
+}
