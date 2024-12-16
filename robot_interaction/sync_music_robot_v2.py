@@ -217,7 +217,40 @@ class DanceInteractionSystem:
             logger.error(f"Error in main loop: {e}")
         finally:
             self.shutdown()
+    
+    def danceforme(self):
+        """Main system execution loop."""
+        try:
+            with MusicPlayer(self.music_path) as music_player:
+                self.initialize_threads()
 
+                while True:
+                    # if not self.frame_queue.empty():
+                    #     frame = self.frame_queue.get()
+                    #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+                    #     if len(self.frame_buffer) >= DanceSystemConfig.MAX_FRAMES:
+                    #         self.frame_buffer.pop(0)
+                    #     self.frame_buffer.append(gray)
+
+                    #     threshold_exceeded = check_threshold(
+                    #         self.frame_buffer,
+                    #         self.diff_buffer,
+                    #         DanceSystemConfig.THRESHOLD,
+                    #         DanceSystemConfig.MAX_FRAMES
+                    #     )
+
+                    #     self.handle_threshold_state(threshold_exceeded, music_player)
+
+                    if self.should_stop():
+                        break
+
+                    if cv2.waitKey(1) & 0xFF == 27:
+                        break
+        except Exception as e:
+            logger.error(f"Error in main loop: {e}")
+        finally:
+            self.shutdown()
     def handle_threshold_state(self, threshold_exceeded: bool, 
                              music_player: MusicPlayer) -> None:
         """Handle system state based on threshold detection."""
