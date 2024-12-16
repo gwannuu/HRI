@@ -18,7 +18,7 @@ class DanceSystemConfig:
     FRAME_QUEUE_SIZE: int = 100
     QUEUE_TIMEOUT: float = 1.0
     THREAD_JOIN_TIMEOUT: float = 5.0
-    PORT_NAME = "/dev/tty.usbmodem58760436701"
+    PORT_NAME = "COM3"
     # PORT_NAME: str = "/dev/tty.usbmodem58A60700081"
 
 # System Status and Performance Monitoring:

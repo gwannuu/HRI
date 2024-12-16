@@ -33,7 +33,7 @@ def robot_control(motion_data):
         step_count = 0
         max_steps = 900  # 로봇이 동작할 총 스텝 수
 
-        subprocess.run(["open", music_path])
+        # subprocess.run(["open", music_path])
         for k in range(max_steps):
 
             target_pwm = sim_robot._pos2pwm(motion_data[k])
@@ -41,10 +41,12 @@ def robot_control(motion_data):
             print (target_pwm)
 
             # Smoothly interpolate between the current and target positions
-            smooth_mover = np.linspace(pwm, target_pwm, 2)
-            for i in range(2):
+            num_iter =2
+            sleep_time = 0.013
+            smooth_mover = np.linspace(pwm, target_pwm, num_iter)
+            for i in range(num_iter):
                 # 30fps에 맞추기 위해 대기 시간 설정
-                time.sleep(0.013)
+                time.sleep(sleep_time)
                 intermediate_pwm = smooth_mover[i]
                 real_robot.set_goal_pos([int(pos) for pos in intermediate_pwm])
 
@@ -73,7 +75,7 @@ if __name__=="__main__":
 
     # Initialize simulated and real robots
     sim_robot = SimulatedRobot(mujoco_model, mujoco_data)
-    real_robot = Robot(device_name='/dev/tty.usbmodem58760436701')
+    real_robot = Robot(device_name='COM3')
 
     # Set the robot to position control mode
     real_robot._set_position_control()
@@ -85,9 +87,9 @@ if __name__=="__main__":
     mujoco_data.qpos[:6] = sim_robot._pwm2pos(pwm)
     mujoco_data.qpos[1] = -sim_robot._pwm2pos(pwm[1])
     
-    pkl_file = 'motions/APT/test_7.pkl'
+    pkl_file = 'motions/APT/6_joints_robot/test_7.pkl'
     # music_path = './test_7.mp4'
-    music_path = "music/Zedd & Alessia Cara_Stay.mp3"
+    music_path = "music/Papa Nugs - Hyperdrive.mp3"
     motion_data = load_motion(pkl_file)
     
     # Set up events for controlling the robot

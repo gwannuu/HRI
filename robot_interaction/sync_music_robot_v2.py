@@ -34,52 +34,52 @@ def robot_control(stop_event: threading.Event,
     """
     try:
         step_count = 0
+      
         status_monitor.update_status('robot', 'running')
-
-        while not stop_event.is_set():
+        max_steps = 900
+        pwm = real_robot.read_position()
+        pwm = np.array(pwm)
+        for k in range(max_steps):
+            if stop_event.is_set():
+                exit()
+            
+        # while not stop_event.is_set():
             if pause_event.is_set():
                 status_monitor.update_status('robot', 'paused')
                 time.sleep(1/DanceSystemConfig.FPS)
                 continue
             
-            pwm = real_robot.read_position()
-            pwm = np.array(pwm)
 
-            # 로봇 동작 완료를 위한 카운터 또는 조건 설정
-            step_count = 0
-            max_steps = 900  # 로봇이 동작할 총 스텝 수
-
-            # subprocess.run(["open", music_path])
-            for k in range(max_steps):
-
-                target_pwm = sim_robot._pos2pwm(motion_data[k])
-                target_pwm = np.array(target_pwm)
-                print (target_pwm)
-
-                # Smoothly interpolate between the current and target positions
-                smooth_mover = np.linspace(pwm, target_pwm, 2)
-                for i in range(2):
-                    # 30fps에 맞추기 위해 대기 시간 설정
-                    time.sleep(0.013)
-                    intermediate_pwm = smooth_mover[i]
-                    real_robot.set_goal_pos([int(pos) for pos in intermediate_pwm])
-
-                    # Update the simulation with the intermediate positions
-                    mujoco_data.qpos[:6] = sim_robot._pwm2pos(intermediate_pwm)
-
-                step_count += 1
-                print(f"Step: {step_count}")
-                logger.debug(f"Robot step: {step_count}")
+    
+        # subprocess.run(["open", music_path])
 
 
-                pwm = target_pwm
+            target_pwm = sim_robot._pos2pwm(motion_data[k])
+            target_pwm = np.array(target_pwm)
+            print (target_pwm)
+
+            # Smoothly interpolate between the current and target positions
+            smooth_mover = np.linspace(pwm, target_pwm, 2)
+            for i in range(2):
+                # 30fps에 맞추기 위해 대기 시간 설정
+                time.sleep(0.013)
+                intermediate_pwm = smooth_mover[i]
+                real_robot.set_goal_pos([int(pos) for pos in intermediate_pwm])
+
+                # Update the simulation with the intermediate positions
+                mujoco_data.qpos[:6] = sim_robot._pwm2pos(intermediate_pwm)
+
+            step_count += 1
+            print(f"Step: {step_count}")
+            logger.debug(f"Robot step: {step_count}")
+
+
+            pwm = target_pwm
             
-            if step_count >= DanceSystemConfig.MAX_ROBOT_STEPS:
-                logger.info("Robot motion completed")
-                robot_done_event.set()
-                break
-
-            time.sleep(1/DanceSystemConfig.FPS)
+            # if step_count >= DanceSystemConfig.MAX_ROBOT_STEPS:
+            #     logger.info("Robot motion completed")
+            #     robot_done_event.set()
+            #     break
 
     except Exception as e:
         logger.error(f"Error in robot control: {e}")
