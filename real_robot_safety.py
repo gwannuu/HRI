@@ -3,7 +3,7 @@ import numpy as np
 import mujoco
 import mujoco.viewer
 
-from interface import SimulatedRobot
+from simulated_robot import SimulatedRobot
 from robot import Robot
 import copy
 

@@ -5,7 +5,7 @@ import mujoco.viewer
 import pickle
 import subprocess
 
-from interface import SimulatedRobot
+from simulated_robot import SimulatedRobot
 from robot import Robot
 
 # Function to load .pkl file
