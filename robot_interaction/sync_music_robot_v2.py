@@ -19,7 +19,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 @dataclass
-class Config:
+class DanceSystemConfig:
     """System configuration parameters."""
     THRESHOLD: float = 10.0
     MAX_FRAMES: int = 15
@@ -32,7 +32,7 @@ class Config:
     THREAD_JOIN_TIMEOUT: float = 5.0
     
 # System Status and Performance Monitoring:
-class SystemStatus:
+class ComponentStateManager:
     """Monitors and maintains system component status."""
     
     def __init__(self):
@@ -127,7 +127,7 @@ class MusicPlayer:
 def robot_control(stop_event: threading.Event, 
                  pause_event: threading.Event,
                  robot_done_event: threading.Event,
-                 status_monitor: SystemStatus) -> None:
+                 status_monitor: ComponentStateManager) -> None:
     """Control robot movements and simulation.
     
     Args:
@@ -143,19 +143,19 @@ def robot_control(stop_event: threading.Event,
         while not stop_event.is_set():
             if pause_event.is_set():
                 status_monitor.update_status('robot', 'paused')
-                time.sleep(1/Config.FPS)
+                time.sleep(1/DanceSystemConfig.FPS)
                 continue
 
             # Simulation step would go here
             step_count += 1
             logger.debug(f"Robot step: {step_count}")
 
-            if step_count >= Config.MAX_ROBOT_STEPS:
+            if step_count >= DanceSystemConfig.MAX_ROBOT_STEPS:
                 logger.info("Robot motion completed")
                 robot_done_event.set()
                 break
 
-            time.sleep(1/Config.FPS)
+            time.sleep(1/DanceSystemConfig.FPS)
 
     except Exception as e:
         logger.error(f"Error in robot control: {e}")
@@ -165,7 +165,7 @@ def robot_control(stop_event: threading.Event,
 @performance_monitor
 def camera_capture(frame_queue: Queue, 
                   stop_event: threading.Event,
-                  status_monitor: SystemStatus) -> None:
+                  status_monitor: ComponentStateManager) -> None:
     """Capture frames from camera and add to queue.
     
     Args:
@@ -174,7 +174,7 @@ def camera_capture(frame_queue: Queue,
         status_monitor: System status monitor
     """
     try:
-        cap = cv2.VideoCapture(Config.CAMERA_INDEX)
+        cap = cv2.VideoCapture(DanceSystemConfig.CAMERA_INDEX)
         if not cap.isOpened():
             logger.error("Failed to open camera")
             return
@@ -188,7 +188,7 @@ def camera_capture(frame_queue: Queue,
                 continue
 
             try:
-                frame_queue.put(frame, timeout=Config.QUEUE_TIMEOUT)
+                frame_queue.put(frame, timeout=DanceSystemConfig.QUEUE_TIMEOUT)
             except Full:
                 frame_queue.get()  # Remove oldest frame
                 frame_queue.put(frame)
@@ -229,16 +229,16 @@ def check_threshold(frame_buffer: List[np.ndarray],
         return avg_change > threshold
     return False
 
-class SystemController:
+class DanceInteractionSystem:
     """Main system controller class."""
 
     def __init__(self):
-        self.status_monitor = SystemStatus()
+        self.status_monitor = ComponentStateManager()
         self.stop_event = threading.Event()
         self.pause_event = threading.Event()
         self.camera_stop_event = threading.Event()
         self.robot_done_event = threading.Event()
-        self.frame_queue = Queue(maxsize=Config.FRAME_QUEUE_SIZE)
+        self.frame_queue = Queue(maxsize=DanceSystemConfig.FRAME_QUEUE_SIZE)
         
         self.frame_buffer = []
         self.diff_buffer = []
@@ -267,16 +267,16 @@ class SystemController:
         self.camera_stop_event.set()
         self.stop_event.set()
         
-        self.camera_thread.join(timeout=Config.THREAD_JOIN_TIMEOUT)
-        self.robot_thread.join(timeout=Config.THREAD_JOIN_TIMEOUT)
+        self.camera_thread.join(timeout=DanceSystemConfig.THREAD_JOIN_TIMEOUT)
+        self.robot_thread.join(timeout=DanceSystemConfig.THREAD_JOIN_TIMEOUT)
         
         cv2.destroyAllWindows()
         logger.info("System shutdown complete")
 
-    def dancewithme(self,music_path:str, dance_path:str):
+    def dancewithme(self,music_path:str=None, dance_path:str=None):
         """Main system execution loop."""
         try:
-            with MusicPlayer(Config.MUSIC_PATH) as music_player:
+            with MusicPlayer(DanceSystemConfig.MUSIC_PATH) as music_player:
                 self.initialize_threads()
 
                 while True:
@@ -284,15 +284,15 @@ class SystemController:
                         frame = self.frame_queue.get()
                         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-                        if len(self.frame_buffer) >= Config.MAX_FRAMES:
+                        if len(self.frame_buffer) >= DanceSystemConfig.MAX_FRAMES:
                             self.frame_buffer.pop(0)
                         self.frame_buffer.append(gray)
 
                         threshold_exceeded = check_threshold(
                             self.frame_buffer,
                             self.diff_buffer,
-                            Config.THRESHOLD,
-                            Config.MAX_FRAMES
+                            DanceSystemConfig.THRESHOLD,
+                            DanceSystemConfig.MAX_FRAMES
                         )
 
                         self.handle_threshold_state(threshold_exceeded, music_player)
@@ -339,8 +339,8 @@ class SystemController:
 def main():
     """Main entry point of the application."""
     logger.info("Starting system")
-    controller = SystemController()
-    controller.run()
+    controller = DanceInteractionSystem()
+    controller.dancewithme()
     logger.info("System terminated")
 
 if __name__ == "__main__":

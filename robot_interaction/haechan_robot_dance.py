@@ -6,37 +6,15 @@ import pickle
 
 from interface import SimulatedRobot
 from robot import Robot
+# Function to load .pkl file
+def load_motion(pkl_file):
+    with open(pkl_file, 'rb') as f:
+        data = pickle.load(f)
+    motion = data.get('full_pose')
+    return motion
 
 # 로봇 명령을 보내는 함수
-def robot_control(stop_event, pause_event, robot_done_event):
-
-    m = mujoco.MjModel.from_xml_path('low_cost_robot/scene.xml')
-    d = mujoco.MjData(m)
-
-    # Initialize simulated and real robots
-    r = SimulatedRobot(m, d)
-    robot = Robot(device_name='/dev/tty.usbmodem58760436701')
-
-    # Set the robot to position control mode
-    robot._set_position_control()
-    robot._enable_torque()
-
-    # Read initial PWM positions from the real robot
-    pwm = robot.read_position()
-    pwm = np.array(pwm)
-    d.qpos[:6] = r._pwm2pos(pwm)
-    d.qpos[1] = -r._pwm2pos(pwm[1])
-
-    # Function to load .pkl file
-    def load_motion(pkl_file):
-        with open(pkl_file, 'rb') as f:
-            data = pickle.load(f)
-        motion = data.get('full_pose')
-        return motion
-    
-    pkl_file = './test_7.pkl'
-    # video_path = './test_7.mp4'
-    motion_data = load_motion(pkl_file)
+def robot_control(stop_event, pause_event, robot_done_event, motion_data):
 
     while not stop_event.is_set():
         if pause_event.is_set():
@@ -45,7 +23,7 @@ def robot_control(stop_event, pause_event, robot_done_event):
             continue
 
     # Launch the Mujoco viewer
-    with mujoco.viewer.launch_passive(m, d) as viewer:
+    with mujoco.viewer.launch_passive(model, data) as viewer:
         while viewer.is_running():
 
             # Read the current position from the real robot
@@ -53,8 +31,8 @@ def robot_control(stop_event, pause_event, robot_done_event):
             pwm = np.array(pwm)
 
             # Update the simulation with the real robot's current position
-            d.qpos[:6] = r._pwm2pos(pwm)
-            mujoco.mj_forward(m, d)
+            data.qpos[:6] = r._pwm2pos(pwm)
+            mujoco.mj_forward(model, data)
 
             # 로봇 동작 완료를 위한 카운터 또는 조건 설정
             step_count = 0
@@ -76,8 +54,8 @@ def robot_control(stop_event, pause_event, robot_done_event):
                     robot.set_goal_pos([int(pos) for pos in intermediate_pwm])
 
                     # Update the simulation with the intermediate positions
-                    d.qpos[:6] = r._pwm2pos(intermediate_pwm)
-                    mujoco.mj_forward(m, d)
+                    data.qpos[:6] = r._pwm2pos(intermediate_pwm)
+                    mujoco.mj_forward(model, data)
                     viewer.sync()
 
                 step_count += 1
@@ -91,3 +69,30 @@ def robot_control(stop_event, pause_event, robot_done_event):
                 print("Robot motion completed.")
                 robot_done_event.set()  # 로봇 동작 완료 이벤트 설정
                 break  # 루프 종료
+
+
+if __name__=="__main__":
+    
+    model = mujoco.MjModel.from_xml_path('low_cost_robot/scene.xml')
+    data = mujoco.MjData(model)
+
+    # Initialize simulated and real robots
+    r = SimulatedRobot(model, data)
+    robot = Robot(device_name='/dev/tty.usbmodem58760436701')
+
+    # Set the robot to position control mode
+    robot._set_position_control()
+    robot._enable_torque()
+
+    # Read initial PWM positions from the real robot
+    pwm = robot.read_position()
+    pwm = np.array(pwm)
+    data.qpos[:6] = r._pwm2pos(pwm)
+    data.qpos[1] = -r._pwm2pos(pwm[1])
+    
+    pkl_file = './test_7.pkl'
+    # video_path = './test_7.mp4'
+    motion_data = load_motion(pkl_file)
+    
+    # Set up events for controlling the robot
+    robot_control()
