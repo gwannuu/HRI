@@ -76,10 +76,10 @@ def robot_control(stop_event: threading.Event,
 
             pwm = target_pwm
             
-            # if step_count >= DanceSystemConfig.MAX_ROBOT_STEPS:
-            #     logger.info("Robot motion completed")
-            #     robot_done_event.set()
-            #     break
+            if step_count >= DanceSystemConfig.MAX_ROBOT_STEPS:
+                logger.info("Robot motion completed")
+                robot_done_event.set()
+                break
 
     except Exception as e:
         logger.error(f"Error in robot control: {e}")
@@ -209,11 +209,11 @@ class DanceInteractionSystem:
                         self.handle_threshold_state(threshold_exceeded, music_player)
 
                     if self.should_stop():
-                        self.shutdown()
+                        # self.shutdown()
                         break
 
                     if cv2.waitKey(1) & 0xFF == 27:
-                        self.shutdown()
+                        # self.shutdown()
                         break
 
         except Exception as e:
@@ -247,17 +247,18 @@ class DanceInteractionSystem:
 
                     if self.should_stop():
                         self.shutdown()
-                        music_player.stop()
+                        # music_player.stop()
                         break
 
                     if cv2.waitKey(1) & 0xFF == 27:
                         self.shutdown()
-                        music_player.stop()
+                        # music_player.stop()
                         break
         except Exception as e:
             logger.error(f"Error in main loop: {e}")
         finally:
             self.shutdown()
+            
     def handle_threshold_state(self, threshold_exceeded: bool, 
                              music_player: MusicPlayer) -> None:
         """Handle system state based on threshold detection."""
