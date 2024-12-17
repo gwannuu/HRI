@@ -71,7 +71,7 @@ def robot_control(stop_event, pause_event, robot_done_event):
 
 # 카메라로부터 프레임을 읽어오는 함수 (스레드)
 def camera_capture(frame_queue, stop_event):
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     while not stop_event.is_set():
         ret, frame = cap.read()
         if ret:
@@ -102,7 +102,7 @@ def check_threshold(frame_buffer, diff_buffer, threshold, max_frames):
 # 메인 실행 함수
 def main():
     # 임계값 설정
-    threshold = 5.0  # 임의의 쓰레숄드 값
+    threshold = 2.0  # 임의의 쓰레숄드 값
     frame_buffer = []
     diff_buffer = []
     max_frames = 15
@@ -133,6 +133,8 @@ def main():
             if not frame_queue.empty():
                 frame = frame_queue.get()
                 # 프레임을 그레이스케일로 변환
+                                # 프레임을 표시
+                cv2.imshow('Camera Feed', frame)
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
                 # 버퍼에 프레임 추가

@@ -10,12 +10,11 @@ import threading
 @dataclass
 class DanceSystemConfig:
     """System configuration parameters."""
-    THRESHOLD: float = 10.0
+    THRESHOLD: float = 1.5
     MAX_FRAMES: int = 15
     FPS: int = 30
     MAX_ROBOT_STEPS: int = 900
-    CAMERA_INDEX: int = 0
-    CAMERA_ON: bool = False
+    CAMERA_INDEX: int = 0 # 0for laptop cam 1 for external cam
     FRAME_QUEUE_SIZE: int = 100
     QUEUE_TIMEOUT: float = 1.0
     THREAD_JOIN_TIMEOUT: float = 5.0

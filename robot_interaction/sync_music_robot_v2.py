@@ -187,7 +187,6 @@ class DanceInteractionSystem:
                 time.sleep(8) #웹캠이 켜지기 전에 music player가 시작되는 것을 방지하기 위해 야매임
 
                 while True:
-                # while DanceSystemConfig.CAMERA_ON:
                     if not self.frame_queue.empty():
                         frame = self.frame_queue.get()
                         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

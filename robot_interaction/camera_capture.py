@@ -30,7 +30,6 @@ def camera_capture(frame_queue: Queue,
 
         status_monitor.update_status('camera', 'running')
         generate_buzzer_sound()
-        DanceSystemConfig.CAMERA_ON = True
         
 
         while not stop_event.is_set():

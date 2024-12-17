@@ -34,8 +34,12 @@ def record_audio():
         q.put(indata.copy())
         
     print("질문을 말씀해주세요...")
+    # Ensure file does not already exist
     if os.path.exists(filename):
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except PermissionError as e:
+            print(f"Cannot remove file {filename}: {e}")
     try:
         # Make sure the file is opened before recording anything:
         with sf.SoundFile(filename, mode='x',channels=channels,samplerate=samplerate) as file:
@@ -45,6 +49,7 @@ def record_audio():
                 print('#' * 20)
                 while not keyboard.is_pressed('q'):
                     file.write(q.get())
+            
     except KeyboardInterrupt:
         print('\nRecording finished: ' + repr(filename))
     except Exception as e:
@@ -55,22 +60,24 @@ def transcribe_audio(audio_file_path=None):
     녹음된 오디오를 텍스트로 변환합니다.
 
     Args:
-        audio_file (str): 오디오 파일의 경로
+        audio_file_path (str): 오디오 파일의 경로
 
     Returns:
         str: 변환된 텍스트
     """
     if audio_file_path is None:
         audio_file_path = "input.mp3"
-    audio_file = open(audio_file_path, "rb")
+
     print("음성을 텍스트로 변환 중입니다...")
-    transcription = client.audio.transcriptions.create(
-    model="whisper-1", 
-    file=audio_file
-    )
+    with open(audio_file_path, "rb") as audio_file:
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1", 
+            file=audio_file
+        )
     
     text = transcription.text.strip()
     print("인식된 질문: {}".format(text))
+    # os.remove(audio_file_path)  # 임시 파일 삭제
     return text
 
 def generate_response(conversation):
