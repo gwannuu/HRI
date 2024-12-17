@@ -22,4 +22,10 @@ if __name__=="__main__":
         )
     else:
         print("잘못된 입력입니다.")
+    
+    # run_robot(
+    #     music_path = "music/Papa Nugs - Hyperdrive.mp3",
+    #     dance_path = "motions/We_Will_Rock_You/6_joints_robot/test_7.pkl",
+    #     withme=True,
+    # )
         
