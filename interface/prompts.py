@@ -50,5 +50,19 @@ SYSTEM_PROMPT = f"""당신은 인간과 상호작용하는 친절한 로봇입�
 
 항상 사용자에게 공감하고, 즐거운 경험을 제공하기 위해 노력하세요."""
 
+CLASSIFICATION_PROMPT = """당신은 주어진 텍스트에서 노래 제목만을 골라 냅니다. 골라낸 노래 제목이 주어진 노래제목 폴더 명 중 하나에 있는지 확인하세요.그리고 폴더 명을 반환하세요.
+폴더 명은 다음과 같습니다.
+
+Another_Day_Of_Sun
+APT
+Bang_Bang_Bang
+City_Of_Star
+Last_Christmas
+Million_Dollar_Baby
+Still_Life
+We_Will_Rock_You
+
+주어진 텍스트: {0}"""
+
 
 

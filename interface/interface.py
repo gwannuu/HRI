@@ -8,7 +8,7 @@ import sys
 import time
 import tempfile
 import os
-from prompts import SYSTEM_PROMPT, SPECIAL_TOKENS
+from prompts import SYSTEM_PROMPT, SPECIAL_TOKENS, CLASSIFICATION_PROMPT
 import keyboard
 
 # 필요한 라이브러리를 설치해야 합니다.
@@ -125,7 +125,7 @@ def input_text_test():
 
         if any(trigger in input_text.lower() for trigger in ['종료', 'bye', '끝']):
             print("대화를 종료합니다.")
-            speak_text("대화를 종료합니다.")
+            # speak_text("대화를 종료합니다.")
             break
 
         # 사용자 메시지를 대화 내역에 추가
@@ -181,6 +181,21 @@ def conversation():
             break
     return conversation[-1]["content"]
 
+def classification_songname(text):
+    """
+    GPT 모델을 사용하여 텍스트를 분류합니다.
+    """
+    conversation = [{"role":"user", "content": CLASSIFICATION_PROMPT.format(text)}]
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",  # 또는 'gpt-4' 등 다른 모델로 변경 가능
+        messages=conversation,
+        max_tokens=20,
+    )
+    answer = response.choices[0].message.content.strip()
+    print("GPT의 응답: {}".format(answer))
+    return answer
+
 def dance_for_user():
     print("춤을 춰드릴게요")
     pass
@@ -196,9 +211,11 @@ def run_function(trigger):
         dance_with_user()
     else:
         print("잘못된 입력입니다.")
-    
+
 
 
 if __name__ == "__main__":
-    final_sentence = conversation()  # 음성 입력을 통한 대화
-    run_function(final_sentence)  # 대화 결과에 따른 기능 실행
+    # final_sentence = conversation()  # 음성 입력을 통한 대화
+    final_sentence = input_text_test()  # 텍스트 입력을 통한 대화
+    song_path = classification_songname(final_sentence)  # 노래 분류
+    run_function(final_sentence, song_path)  # 대화 결과에 따른 기능 실행
