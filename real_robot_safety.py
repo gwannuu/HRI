@@ -3,9 +3,11 @@ import numpy as np
 import mujoco
 import mujoco.viewer
 
-from interface import SimulatedRobot
+from simulated_robot import SimulatedRobot
 from robot import Robot
 import copy
+
+from robot_interaction.util import DanceSystemConfig
 
 def clock(step_start):
     time_until_next_step = m.opt.timestep - (time.time() - step_start)
@@ -18,7 +20,7 @@ d = mujoco.MjData(m)
 r = SimulatedRobot(m, d)
 init_qpos = copy.deepcopy(d.qpos[:6])
 
-robot = Robot(device_name='/dev/ttyACM0')
+robot = Robot(device_name=DanceSystemConfig.PORT_NAME)
 robot._set_position_control()
 robot._enable_torque()
 
