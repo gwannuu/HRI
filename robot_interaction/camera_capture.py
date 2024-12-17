@@ -12,7 +12,7 @@ from robot_interaction.music_player import generate_buzzer_sound
 from ultralytics import YOLO
 
 @performance_monitor
-def camera_capture(frame_queue: Queue,
+def camera_capture(
                   pose_queue: Queue,
                   stop_event: threading.Event,
                   status_monitor: ComponentStateManager) -> None:
@@ -46,25 +46,26 @@ def camera_capture(frame_queue: Queue,
             # 화면에 출력
             # cv2.imshow('camera', frame)
             keypoints = []
-
+            first_people_keypoint  = []
             for result in results:
                 # keypoints 정보 추출
                 kpts = result.keypoints.xy.cpu().numpy() if result.keypoints else None
                 if kpts is not None and len(kpts) > 0:
-                    keypoints = kpts[0]  # 첫 번째 사람의 keypoints만 사용
+                    first_people_keypoint = kpts[0]  # 첫 번째 사람의 keypoints만 사용
 
             if not ret:
                 logger.warning("Failed to capture frame")
                 continue
 
             try:
-                frame_queue.put(frame, timeout=DanceSystemConfig.QUEUE_TIMEOUT)
-                pose_queue.put(keypoints, timeout=DanceSystemConfig.QUEUE_TIMEOUT)
+                # frame_queue.put(frame, timeout=DanceSystemConfig.QUEUE_TIMEOUT)
+                pose_queue.put(first_people_keypoint, timeout=DanceSystemConfig.QUEUE_TIMEOUT)
+
             except Full:
-                frame_queue.get()  # Remove oldest frame
-                frame_queue.put(frame)
+                # frame_queue.get()  # Remove oldest frame
+                # frame_queue.put(frame)
                 pose_queue.get()  # Remove oldest frame
-                pose_queue.put(keypoints)
+                pose_queue.put(first_people_keypoint)
 
 
     except Exception as e:
