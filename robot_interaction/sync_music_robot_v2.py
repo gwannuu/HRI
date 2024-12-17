@@ -40,12 +40,14 @@ def robot_control(stop_event: threading.Event,
         pwm = real_robot.read_position()
         pwm = np.array(pwm)
         for k in range(max_steps):
-            if stop_event.is_set():
-                exit()
+            # if stop_event.is_set():
+            #     exit()
             
         # while not stop_event.is_set():
             if pause_event.is_set():
                 status_monitor.update_status('robot', 'paused')
+                pwm = real_robot.read_position()
+                pwm = np.array(pwm)
                 time.sleep(1/DanceSystemConfig.FPS)
                 continue
 
@@ -151,6 +153,8 @@ class DanceInteractionSystem:
 
     def initialize_threads(self):
         """Initialize and start system threads."""
+        self.pause_event.set()  # Start paused
+
         self.camera_thread = threading.Thread(
             target=camera_capture,
             args=(self.frame_queue, self.camera_stop_event, self.status_monitor)
@@ -162,10 +166,10 @@ class DanceInteractionSystem:
                   self.status_monitor, self.motion_data,self.real_robot, self.sim_robot,self.mujoco_data)
         )
 
-        self.pause_event.set()  # Start paused
         self.camera_thread.start()
         self.robot_thread.start()
 
+        
     def shutdown(self):
         """Gracefully shut down all system components."""
         logger.info("Initiating system shutdown")
@@ -184,7 +188,7 @@ class DanceInteractionSystem:
             with MusicPlayer(self.music_path) as music_player:
                 self.initialize_threads()
                 #야매 해결책
-                time.sleep(8) #웹캠이 켜지기 전에 music player가 시작되는 것을 방지하기 위해 야매임
+                time.sleep(13.5) #웹캠이 켜지기 전에 music player가 시작되는 것을 방지하기 위해 야매임
 
                 while True:
                     if not self.frame_queue.empty():
@@ -207,8 +211,8 @@ class DanceInteractionSystem:
                     if self.should_stop():
                         break
 
-                    if cv2.waitKey(1) & 0xFF == 27:
-                        break
+                    # if cv2.waitKey(1) & 0xFF == 27:
+                    #     break
 
         except Exception as e:
             logger.error(f"Error in main loop: {e}")
