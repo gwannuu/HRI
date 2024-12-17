@@ -48,11 +48,6 @@ def robot_control(stop_event: threading.Event,
                 status_monitor.update_status('robot', 'paused')
                 time.sleep(1/DanceSystemConfig.FPS)
                 continue
-            
-
-    
-        # subprocess.run(["open", music_path])
-
 
             target_pwm = sim_robot._pos2pwm(motion_data[k])
             target_pwm = np.array(target_pwm)
@@ -180,7 +175,6 @@ class DanceInteractionSystem:
         self.camera_thread.join(timeout=DanceSystemConfig.THREAD_JOIN_TIMEOUT)
         self.robot_thread.join(timeout=DanceSystemConfig.THREAD_JOIN_TIMEOUT)
         
-        
         cv2.destroyAllWindows()
         logger.info("System shutdown complete")
 
@@ -189,6 +183,8 @@ class DanceInteractionSystem:
         try:
             with MusicPlayer(self.music_path) as music_player:
                 self.initialize_threads()
+                #야매 해결책
+                time.sleep(9) #웹캠이 켜지기 전에 music player가 시작되는 것을 방지하기 위해
 
                 while True:
                     if not self.frame_queue.empty():
@@ -209,11 +205,9 @@ class DanceInteractionSystem:
                         self.handle_threshold_state(threshold_exceeded, music_player)
 
                     if self.should_stop():
-                        # self.shutdown()
                         break
 
                     if cv2.waitKey(1) & 0xFF == 27:
-                        # self.shutdown()
                         break
 
         except Exception as e:
@@ -228,32 +222,16 @@ class DanceInteractionSystem:
                 self.initialize_threads()
 
                 while True:
-                    # if not self.frame_queue.empty():
-                    #     frame = self.frame_queue.get()
-                    #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-                    #     if len(self.frame_buffer) >= DanceSystemConfig.MAX_FRAMES:
-                    #         self.frame_buffer.pop(0)
-                    #     self.frame_buffer.append(gray)
-
-                    #     threshold_exceeded = check_threshold(
-                    #         self.frame_buffer,
-                    #         self.diff_buffer,
-                    #         DanceSystemConfig.THRESHOLD,
-                    #         DanceSystemConfig.MAX_FRAMES
-                    #     )
-
                     self.handle_threshold_state(True, music_player)
 
                     if self.should_stop():
                         self.shutdown()
-                        # music_player.stop()
                         break
 
                     if cv2.waitKey(1) & 0xFF == 27:
                         self.shutdown()
-                        # music_player.stop()
                         break
+                    
         except Exception as e:
             logger.error(f"Error in main loop: {e}")
         finally:
