@@ -40,9 +40,9 @@ def record_audio():
         # Make sure the file is opened before recording anything:
         with sf.SoundFile(filename, mode='x',channels=channels,samplerate=samplerate) as file:
             with sd.InputStream(device=1,channels=channels, samplerate=samplerate,callback=callback):
-                print('#' * 20)
-                print('press "q" to stop the recording')
-                print('#' * 20)
+                # print('#' * 20)
+                # print('press "q" to stop the recording')
+                # print('#' * 20)
                 # while not keyboard.is_pressed('q'):
                 #     file.write(q.get())
     except KeyboardInterrupt:
