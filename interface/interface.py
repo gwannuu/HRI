@@ -194,8 +194,8 @@ def classification_songname(text):
         max_tokens=20,
     )
     answer = response.choices[0].message.content.strip()
-    print("GPT의 응답: {}".format(answer))
-    return answer
+    print(f"변환된 song_name: {answer}")
+    return answer.strip()
 
 def dance_for_user():
     print("춤을 춰드릴게요")

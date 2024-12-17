@@ -9,7 +9,7 @@ RECOMMAND_SONG_LIST = """1. 유저가 스트레스 심한 상태
     → 스트레스가 풀릴만한 빠르고 신나는 노래
     - (149 bpm) ROSÉ & Bruno Mars - APT
     - (135 bpm) 빅뱅 - 뱅뱅뱅
-    - (137 bpm)MILLION DOLLAR BABY - tommy richman bpm
+    - (137 bpm) Tommy Richman - MILLION DOLLAR BABY
 
 2. 곧 크리스마스니까 크리스마스에 어울리는 노래 추천
     → 캐롤
@@ -22,7 +22,6 @@ RECOMMAND_SONG_LIST = """1. 유저가 스트레스 심한 상태
 
 4. 유저가 프로젝트 때문에 정신 없으니 조용한 분위기의 노래를 원함
     → 느린 노래
-    - (59 bpm) BIGBANG - 봄여름가을겨울
     - (98 bpm) LA LA LAND - City of Star"""
     
 SYSTEM_PROMPT = f"""당신은 인간과 상호작용하는 친절하고 배려 깊은 로봇입니다.  
@@ -85,7 +84,6 @@ Bang_Bang_Bang
 City_Of_Star
 Last_Christmas
 Million_Dollar_Baby
-Still_Life
 We_Will_Rock_You
 
 주어진 텍스트: {text}
