@@ -180,6 +180,7 @@ class DanceInteractionSystem:
         self.camera_thread.join(timeout=DanceSystemConfig.THREAD_JOIN_TIMEOUT)
         self.robot_thread.join(timeout=DanceSystemConfig.THREAD_JOIN_TIMEOUT)
         
+        
         cv2.destroyAllWindows()
         logger.info("System shutdown complete")
 
@@ -208,9 +209,11 @@ class DanceInteractionSystem:
                         self.handle_threshold_state(threshold_exceeded, music_player)
 
                     if self.should_stop():
+                        self.shutdown()
                         break
 
                     if cv2.waitKey(1) & 0xFF == 27:
+                        self.shutdown()
                         break
 
         except Exception as e:
@@ -240,12 +243,16 @@ class DanceInteractionSystem:
                     #         DanceSystemConfig.MAX_FRAMES
                     #     )
 
-                    #     self.handle_threshold_state(threshold_exceeded, music_player)
+                    self.handle_threshold_state(True, music_player)
 
                     if self.should_stop():
+                        self.shutdown()
+                        music_player.stop()
                         break
 
                     if cv2.waitKey(1) & 0xFF == 27:
+                        self.shutdown()
+                        music_player.stop()
                         break
         except Exception as e:
             logger.error(f"Error in main loop: {e}")
@@ -288,8 +295,8 @@ def run_robot(music_path: str, dance_path: str, withme: bool):
     )
     if withme:
         controller.dancewithme()
-    # else:
-        # controller.danceforme()
+    else:
+        controller.danceforme()
     logger.info("System terminated")
 
 if __name__ == "__main__":
