@@ -39,7 +39,9 @@ def robot_control(stop_event: threading.Event,
         max_steps = 900
         pwm = real_robot.read_position()
         pwm = np.array(pwm)
-        for k in range(max_steps):
+        
+        while step_count < max_steps:
+        # for k in range(max_steps):
             if stop_event.is_set():
                 exit()
             
