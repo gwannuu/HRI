@@ -40,14 +40,12 @@ def robot_control(stop_event: threading.Event,
         pwm = real_robot.read_position()
         pwm = np.array(pwm)
         for k in range(max_steps):
-            # if stop_event.is_set():
-            #     exit()
+            if stop_event.is_set():
+                exit()
             
         # while not stop_event.is_set():
             if pause_event.is_set():
                 status_monitor.update_status('robot', 'paused')
-                pwm = real_robot.read_position()
-                pwm = np.array(pwm)
                 time.sleep(1/DanceSystemConfig.FPS)
                 continue
 
@@ -85,7 +83,7 @@ def robot_control(stop_event: threading.Event,
 
 @performance_monitor
 def check_threshold(frame_buffer: List[np.ndarray],
-                   diff_buffer: List[float],
+                   diff_buffer: List[np.ndarray],
                    threshold: float,
                    max_frames: int) -> bool:
     """Check if frame differences exceed threshold.
@@ -99,17 +97,26 @@ def check_threshold(frame_buffer: List[np.ndarray],
     Returns:
         bool: True if threshold is exceeded
     """
+    movement_threshold = 5
     if len(frame_buffer) > 1:
-        diff = cv2.absdiff(frame_buffer[-1], frame_buffer[-2])
-        mean_diff = np.mean(diff)
+        keypoints = frame_buffer[-1]
+        prev_keypoints = frame_buffer[-2]
+        if len(prev_keypoints) == len(keypoints):
+            distances = np.sqrt(np.sum((keypoints - prev_keypoints) ** 2, axis=1))
+            if np.any(distances > movement_threshold):
+                moved = True
+
+
+        # diff = cv2.absdiff(frame_buffer[-1], frame_buffer[-2])
+        # mean_diff = np.mean(diff)
         
         if len(diff_buffer) >= max_frames - 1:
             diff_buffer.pop(0)
-        diff_buffer.append(mean_diff)
+        diff_buffer.append(moved)
 
     if len(diff_buffer) == max_frames - 1:
-        avg_change = np.mean(diff_buffer)
-        return avg_change > threshold
+        count = diff_buffer.count(True)
+        return count > threshold
     return False
 
 class DanceInteractionSystem:
@@ -122,6 +129,7 @@ class DanceInteractionSystem:
         self.camera_stop_event = threading.Event()
         self.robot_done_event = threading.Event()
         self.frame_queue = Queue(maxsize=DanceSystemConfig.FRAME_QUEUE_SIZE)
+        self.pose_queue = Queue(maxsize=DanceSystemConfig.FRAME_QUEUE_SIZE)
         
         self.frame_buffer = []
         self.diff_buffer = []
@@ -153,11 +161,9 @@ class DanceInteractionSystem:
 
     def initialize_threads(self):
         """Initialize and start system threads."""
-        self.pause_event.set()  # Start paused
-
         self.camera_thread = threading.Thread(
             target=camera_capture,
-            args=(self.frame_queue, self.camera_stop_event, self.status_monitor)
+            args=(self.frame_queue, self.pose_queue, self.camera_stop_event, self.status_monitor)
         )
         
         self.robot_thread = threading.Thread(
@@ -166,10 +172,10 @@ class DanceInteractionSystem:
                   self.status_monitor, self.motion_data,self.real_robot, self.sim_robot,self.mujoco_data)
         )
 
+        self.pause_event.set()  # Start paused
         self.camera_thread.start()
         self.robot_thread.start()
 
-        
     def shutdown(self):
         """Gracefully shut down all system components."""
         logger.info("Initiating system shutdown")
@@ -188,16 +194,17 @@ class DanceInteractionSystem:
             with MusicPlayer(self.music_path) as music_player:
                 self.initialize_threads()
                 #야매 해결책
-                time.sleep(13.5) #웹캠이 켜지기 전에 music player가 시작되는 것을 방지하기 위해 야매임
+                time.sleep(8) #웹캠이 켜지기 전에 music player가 시작되는 것을 방지하기 위해 야매임
 
                 while True:
-                    if not self.frame_queue.empty():
-                        frame = self.frame_queue.get()
-                        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                # while DanceSystemConfig.CAMERA_ON:
+                    if not self.pose_queue.empty():
+                        frame = self.pose_queue.get()
+                        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
                         if len(self.frame_buffer) >= DanceSystemConfig.MAX_FRAMES:
                             self.frame_buffer.pop(0)
-                        self.frame_buffer.append(gray)
+                        self.frame_buffer.append(frame)
 
                         threshold_exceeded = check_threshold(
                             self.frame_buffer,
@@ -211,8 +218,8 @@ class DanceInteractionSystem:
                     if self.should_stop():
                         break
 
-                    # if cv2.waitKey(1) & 0xFF == 27:
-                    #     break
+                    if cv2.waitKey(1) & 0xFF == 27:
+                        break
 
         except Exception as e:
             logger.error(f"Error in main loop: {e}")
