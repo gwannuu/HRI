@@ -8,7 +8,7 @@ import sys
 import time
 import tempfile
 import os
-from prompts import SYSTEM_PROMPT, SPECIAL_TOKENS, CLASSIFICATION_PROMPT
+from interface.prompts import SYSTEM_PROMPT, SPECIAL_TOKENS, CLASSIFICATION_PROMPT
 import keyboard
 
 # 필요한 라이브러리를 설치해야 합니다.
@@ -144,6 +144,7 @@ def input_text_test():
             print("대화를 종료합니다.")
             # speak_text("대화를 종료합니다.")
             break
+    return conversation[-1]["content"]
 
 # 사용 예시
 def conversation():
@@ -185,7 +186,7 @@ def classification_songname(text):
     """
     GPT 모델을 사용하여 텍스트를 분류합니다.
     """
-    conversation = [{"role":"user", "content": CLASSIFICATION_PROMPT.format(text)}]
+    conversation = [{"role":"user", "content": CLASSIFICATION_PROMPT.format(text=text)}]
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",  # 또는 'gpt-4' 등 다른 모델로 변경 가능
