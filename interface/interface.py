@@ -9,7 +9,7 @@ import time
 import tempfile
 import os
 from interface.prompts import SYSTEM_PROMPT, SPECIAL_TOKENS, CLASSIFICATION_PROMPT
-# import keyboard
+import keyboard
 
 # 필요한 라이브러리를 설치해야 합니다.
 # pip install openai sounddevice soundfile numpy gtts playsound
@@ -40,11 +40,11 @@ def record_audio():
         # Make sure the file is opened before recording anything:
         with sf.SoundFile(filename, mode='x',channels=channels,samplerate=samplerate) as file:
             with sd.InputStream(device=1,channels=channels, samplerate=samplerate,callback=callback):
-                # print('#' * 20)
-                # print('press "q" to stop the recording')
-                # print('#' * 20)
-                # while not keyboard.is_pressed('q'):
-                #     file.write(q.get())
+                print('#' * 20)
+                print('press "q" to stop the recording')
+                print('#' * 20)
+                while not keyboard.is_pressed('q'):
+                    file.write(q.get())
     except KeyboardInterrupt:
         print('\nRecording finished: ' + repr(filename))
     except Exception as e:
