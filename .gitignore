@@ -6,4 +6,5 @@ low_cost_robot/assets/
 *.wav
 motions/
 music/
+*.pt
 

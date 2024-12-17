@@ -27,6 +27,8 @@ def camera_capture(frame_queue: Queue,
         model = YOLO('yolov8n-pose.pt')
 
         cap = cv2.VideoCapture(DanceSystemConfig.CAMERA_INDEX)
+        cap.set(3, 640)  # 프레임 너비 설정
+        cap.set(4, 480)  # 프레임 높이 설정
         if not cap.isOpened():
             logger.error("Failed to open camera")
             return
@@ -38,6 +40,11 @@ def camera_capture(frame_queue: Queue,
         while not stop_event.is_set():
             ret, frame = cap.read()
             results = model(frame, verbose=False)
+            # annotated_frame = results[0].plot() if len(results) > 0 else frame  # YOLO 결과 시각화
+            # FPS 표시
+            # cv2.putText(annotated_frame, f"FPS: {int(fps)}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # 화면에 출력
+            # cv2.imshow('camera', frame)
             keypoints = []
 
             for result in results:

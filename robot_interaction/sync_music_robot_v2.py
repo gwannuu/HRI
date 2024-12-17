@@ -39,7 +39,9 @@ def robot_control(stop_event: threading.Event,
         max_steps = 900
         pwm = real_robot.read_position()
         pwm = np.array(pwm)
-        for k in range(max_steps):
+        # for k in range(max_steps):
+        
+        while step_count < max_steps:
             if stop_event.is_set():
                 exit()
             
@@ -49,7 +51,7 @@ def robot_control(stop_event: threading.Event,
                 time.sleep(1/DanceSystemConfig.FPS)
                 continue
 
-            target_pwm = sim_robot._pos2pwm(motion_data[k])
+            target_pwm = sim_robot._pos2pwm(motion_data[step_count])
             target_pwm = np.array(target_pwm)
             print (target_pwm)
 
@@ -83,7 +85,7 @@ def robot_control(stop_event: threading.Event,
 
 @performance_monitor
 def check_threshold(frame_buffer: List[np.ndarray],
-                   diff_buffer: List[np.ndarray],
+                   diff_buffer: List[bool],
                    threshold: float,
                    max_frames: int) -> bool:
     """Check if frame differences exceed threshold.
@@ -97,10 +99,11 @@ def check_threshold(frame_buffer: List[np.ndarray],
     Returns:
         bool: True if threshold is exceeded
     """
-    movement_threshold = 5
+    movement_threshold = 10
     if len(frame_buffer) > 1:
         keypoints = frame_buffer[-1]
         prev_keypoints = frame_buffer[-2]
+        moved = False
         if len(prev_keypoints) == len(keypoints):
             distances = np.sqrt(np.sum((keypoints - prev_keypoints) ** 2, axis=1))
             if np.any(distances > movement_threshold):
@@ -117,7 +120,8 @@ def check_threshold(frame_buffer: List[np.ndarray],
     if len(diff_buffer) == max_frames - 1:
         count = diff_buffer.count(True)
         return count > threshold
-    return False
+    else:
+        return False
 
 class DanceInteractionSystem:
     """Main system controller class."""
@@ -218,8 +222,8 @@ class DanceInteractionSystem:
                     if self.should_stop():
                         break
 
-                    if cv2.waitKey(1) & 0xFF == 27:
-                        break
+                    # if cv2.waitKey(1) & 0xFF == 27:
+                    #     break
 
         except Exception as e:
             logger.error(f"Error in main loop: {e}")

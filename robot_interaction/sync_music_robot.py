@@ -81,21 +81,42 @@ def camera_capture(frame_queue, stop_event):
     cap.release()
 
 # 임계값을 확인하는 함수
-def check_threshold(frame_buffer, diff_buffer, threshold, max_frames):
-    # 프레임 버퍼에서 프레임 간 차이 계산
+def check_threshold(frame_buffer: List[np.ndarray],
+                   diff_buffer: List[np.ndarray],
+                   threshold: float,
+                   max_frames: int) -> bool:
+    """Check if frame differences exceed threshold.
+    
+    Args:
+        frame_buffer: Buffer of recent frames
+        diff_buffer: Buffer of frame differences
+        threshold: Threshold for movement detection
+        max_frames: Maximum number of frames to consider
+    
+    Returns:
+        bool: True if threshold is exceeded
+    """
+    movement_threshold = 10
     if len(frame_buffer) > 1:
-        diff = cv2.absdiff(frame_buffer[-1], frame_buffer[-2])
-        mean_diff = np.mean(diff)
+        keypoints = frame_buffer[-1]
+        prev_keypoints = frame_buffer[-2]
+        moved = False
+        if len(prev_keypoints) == len(keypoints):
+            distances = np.sqrt(np.sum((keypoints - prev_keypoints) ** 2, axis=1))
+            if np.any(distances > movement_threshold):
+                moved = True
+
+
+        # diff = cv2.absdiff(frame_buffer[-1], frame_buffer[-2])
+        # mean_diff = np.mean(diff)
+        
         if len(diff_buffer) >= max_frames - 1:
             diff_buffer.pop(0)
-        diff_buffer.append(mean_diff)
+        diff_buffer.append(moved)
 
-    # 최근 프레임들의 평균 변화량 계산
     if len(diff_buffer) == max_frames - 1:
-        avg_change = np.mean(diff_buffer)
-        # print(f"Average Change: {avg_change}")
-        # 임계값과 비교하여 결과 반환
-        return avg_change > threshold
+        count = diff_buffer.count(True)
+        return count > threshold
     else:
         return False
 
@@ -114,6 +135,7 @@ def main():
     pause_event.set()  # 초기에는 일시 중지 상태로 설정
     camera_stop_event = threading.Event()
     frame_queue = Queue()
+    pose_queue = Queue()
     # 로봇 동작 완료 이벤트 추가
     robot_done_event = threading.Event()
 
