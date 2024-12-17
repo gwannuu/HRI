@@ -53,7 +53,7 @@ def robot_control(stop_event: threading.Event,
                 time.sleep(1/DanceSystemConfig.FPS)
                 continue
 
-            target_pwm = sim_robot._pos2pwm(motion_data[k])
+            target_pwm = sim_robot._pos2pwm(motion_data[step_count])
             target_pwm = np.array(target_pwm)
             print (target_pwm)
 
