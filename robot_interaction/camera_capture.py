@@ -8,6 +8,8 @@ import cv2
 import threading
 from queue import Full, Queue
 
+from robot_interaction.music_player import generate_buzzer_sound
+
 
 @performance_monitor
 def camera_capture(frame_queue: Queue,
@@ -27,6 +29,9 @@ def camera_capture(frame_queue: Queue,
             return
 
         status_monitor.update_status('camera', 'running')
+        generate_buzzer_sound()
+        DanceSystemConfig.CAMERA_ON = True
+        
 
         while not stop_event.is_set():
             ret, frame = cap.read()

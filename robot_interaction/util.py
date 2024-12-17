@@ -15,6 +15,7 @@ class DanceSystemConfig:
     FPS: int = 30
     MAX_ROBOT_STEPS: int = 900
     CAMERA_INDEX: int = 0
+    CAMERA_ON: bool = False
     FRAME_QUEUE_SIZE: int = 100
     QUEUE_TIMEOUT: float = 1.0
     THREAD_JOIN_TIMEOUT: float = 5.0
